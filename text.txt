@@ -1,0 +1,22 @@
+
+ deep analyze kro frontend aur backend code ko aur problem fix kro 
+
+
+
+
+
+1. profile section mai  post delete nhi ho rhi delte ko click se
+
+2. chat section mai dono users ko select krne baad chats send aur receve ho rhi hai  , 
+user ko bhi meri profile ko select krke rkhna pdta hai wrna usko msg receve nhi hota ye automatic hona cahiye  
+deep analyze kro frontend aur backend code ko aur problem fix kro
+profile mai messege button click krne pr direct usi user ke sath chat connect honi chahiye jaise insagram mai hoti hai 
+ 
+
+  echo "# fullStackSocial" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git branch -M main
+git remote add origin https://github.com/ClassyKaran/fullStackSocial.git
+git push -u origin main
