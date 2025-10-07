@@ -6,6 +6,8 @@
   
 // })
 
+
+
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
@@ -15,11 +17,8 @@ export default defineConfig({
     react(),
     viteStaticCopy({
       targets: [
-        {
-          src: 'public/_redirects', // tumhara _redirects file path
-          dest: '.',                 // copy to root of dist/
-        },
-      ],
-    }),
-  ],
+        { src: 'public/_redirects', dest: '.' } // copy to dist root
+      ]
+    })
+  ]
 });
