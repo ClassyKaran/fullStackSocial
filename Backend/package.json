@@ -4,7 +4,7 @@
   "description": "Backend for Mini Social Platform (Node.js + Express + MongoDB)",
   "main": "server.js",
   "scripts": {
-    "start": "nodemon server.js"
+    "start": "server.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
