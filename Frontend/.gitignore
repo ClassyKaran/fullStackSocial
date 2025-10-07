@@ -15,9 +15,9 @@ logs
 Thumbs.db
 
 # Environment files
-# .env
-# .env.local
-# .env.*.local
+.env
+.env.local
+.env.*.local
 
 # Build directories
 dist/

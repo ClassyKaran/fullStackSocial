@@ -40,13 +40,14 @@ function Chat() {
     }
   }, [messages, activeUser]);
 
-  // Get current user ID
-  const myId = localStorage.getItem('token') ? (() => {
+  // Get current user ID and username from token
+  const myTokenPayload = localStorage.getItem('token') ? (() => {
     try {
-      const payload = JSON.parse(atob(localStorage.getItem('token').split('.')[1]));
-      return payload.id || payload.userId || '';
-    } catch { return ''; }
-  })() : '';
+      return JSON.parse(atob(localStorage.getItem('token').split('.')[1]));
+    } catch { return {}; }
+  })() : {};
+  const myId = myTokenPayload.id || myTokenPayload.userId || '';
+  const myUsername = myTokenPayload.username || myTokenPayload.name || 'Me';
 
   // Persist recent users
   useEffect(() => {
@@ -80,9 +81,15 @@ function Chat() {
   }, [chatHistory, activeUser]);
 
   // Merge backend users and recent chat users
+  // Prefer backend user object (with username) over recent user
   const mergedUsers = React.useMemo(() => {
     const map = {};
-    [...(users || []), ...(recentUsers || [])].forEach(u => {
+    // First, add all recent users
+    (recentUsers || []).forEach(u => {
+      if (u && u.id) map[u.id] = u;
+    });
+    // Then, override with backend users (which should have username)
+    (users || []).forEach(u => {
       if (u && u.id) map[u.id] = u;
     });
     return Object.values(map);
@@ -136,7 +143,13 @@ function Chat() {
                 style={{ width: 36, height: 36, objectFit: 'cover', background: '#eee' }}
               />
             )}
-            <h6 className="mb-0 text-secondary">{activeUser ? ` ${activeUser.username || activeUser.id}` : 'Select a user to chat'}</h6>
+            <h6 className="mb-0 text-secondary">
+              {activeUser
+                ? (activeUser.id === myId
+                    ? ` ${myUsername}`
+                    : ` ${activeUser.username || 'Unknown'}`)
+                : 'Select a user to chat'}
+            </h6>
 
           </div>
           <div

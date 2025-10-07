@@ -20,3 +20,18 @@ git commit -m "first commit"
 git branch -M main
 git remote add origin https://github.com/ClassyKaran/fullStackSocial.git
 git push -u origin main
+
+
+
+// Backend/server.js ya app.js me, sabse last me (API routes ke baad)
+app.use((req, res, next) => {
+  if (req.method === 'GET' && !req.path.startsWith('/api') && !req.path.startsWith('/uploads')) {
+    res.sendFile(path.join(__dirname, '../Frontend/dist/index.html'));
+  } else {
+    next();
+  }
+});
+
+
+
+app.use(express.static(path.join(__dirname, '../Frontend/dist')));

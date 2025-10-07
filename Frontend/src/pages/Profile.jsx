@@ -25,6 +25,20 @@ function Profile() {
 
   // Message button handler
   const handleMessage = () => {
+    // Add this user to recentChatUsers in localStorage if not already present
+    try {
+      const recent = JSON.parse(localStorage.getItem('recentChatUsers')) || [];
+      const exists = recent.find(u => String(u.id) === String(profile?._id || profile?.id));
+      if (!exists && profile) {
+        const newUser = {
+          id: profile._id || profile.id,
+          username: profile.username,
+          profileImage: profile.profileImage || '',
+        };
+        const newList = [newUser, ...recent.filter(u => String(u.id) !== String(newUser.id))];
+        localStorage.setItem('recentChatUsers', JSON.stringify(newList));
+      }
+    } catch {}
     window.location.href = `/chat?userId=${userId}`;
   };
   const [showListModal, setShowListModal] = useState({ open: false, type: null });

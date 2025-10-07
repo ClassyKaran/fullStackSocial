@@ -1,8 +1,13 @@
 
-import { useQuery } from '@tanstack/react-query';
-import * as chatApi from '../api/chat';
+
 import { useState, useEffect } from 'react';
 import io from 'socket.io-client';
+// Helper to get userId from query param
+function getUserIdFromQuery() {
+  if (typeof window === 'undefined') return null;
+  const params = new URLSearchParams(window.location.search);
+  return params.get('userId');
+}
 
 export function useChat() {
   const [messages, setMessages] = useState([]);
@@ -77,8 +82,32 @@ export function useChat() {
     if (typeof userId === 'object' && userId.id) {
       userObj = userId;
     } else {
-      userObj = users.find(u => u.id === userId) || { id: userId };
+      // Try to find in users array
+      userObj = users.find(u => u.id === userId);
+      // Try to find in recent users from localStorage if not found
+      if (!userObj) {
+        try {
+          const recent = JSON.parse(localStorage.getItem('recentChatUsers')) || [];
+          userObj = recent.find(u => u.id === userId);
+        } catch { userObj = null; }
+      }
+      // Fallback to id and Unknown username
+      if (!userObj) userObj = { id: userId, username: 'Unknown' };
     }
+    // Always add to recentChatUsers
+    try {
+      const recent = JSON.parse(localStorage.getItem('recentChatUsers')) || [];
+      const exists = recent.find(u => String(u.id) === String(userObj.id));
+      if (!exists) {
+        const newUser = {
+          id: userObj.id,
+          username: userObj.username,
+          profileImage: userObj.profileImage || '',
+        };
+        const newList = [newUser, ...recent.filter(u => String(u.id) !== String(newUser.id))];
+        localStorage.setItem('recentChatUsers', JSON.stringify(newList));
+      }
+    } catch {}
     setActiveUser(userObj);
     // Mark all messages as read for this user
     setChatHistory(prevHistory => {
@@ -110,6 +139,15 @@ export function useChat() {
       socket.emit('message', { to: activeUser.id, text });
     }
   };
+
+  // On mount, if userId in query param, auto-select that user
+  useEffect(() => {
+    const userIdFromQuery = getUserIdFromQuery();
+    if (userIdFromQuery) {
+      selectUser(userIdFromQuery);
+    }
+    // eslint-disable-next-line
+  }, []);
 
   return { users, messages, sendMessage, selectUser, activeUser };
 }
