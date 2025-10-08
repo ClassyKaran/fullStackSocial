@@ -45,23 +45,23 @@ app.use("/users", userRoutes);
 // Error handler
 app.use(errorHandler);
 
-// Serve frontend static files (Vite build output)
-const path = require('path');
-app.use(express.static(path.join(__dirname, '../Frontend/dist')));
 
-// SPA fallback: send index.html for any GET request not handled above (except uploads/api)
-app.get('*', (req, res, next) => {
-  if (
-    req.method !== 'GET' ||
-    req.path.startsWith('/uploads') ||
-    req.path.startsWith('/auth') ||
-    req.path.startsWith('/posts') ||
-    req.path.startsWith('/users')
-  ) {
-    return next();
-  }
-  res.sendFile(path.join(__dirname, '../Frontend/dist/index.html'));
-});
+// const path = require('path');
+// app.use(express.static(path.join(__dirname, '../Frontend/dist')));
+
+
+// app.get('*', (req, res, next) => {
+//   if (
+//     req.method !== 'GET' ||
+//     req.path.startsWith('/uploads') ||
+//     req.path.startsWith('/auth') ||
+//     req.path.startsWith('/posts') ||
+//     req.path.startsWith('/users')
+//   ) {
+//     return next();
+//   }
+//   res.sendFile(path.join(__dirname, '../Frontend/dist/index.html'));
+// });
 
 // Socket.io setup
 require("./controllers/chatController")(io);
