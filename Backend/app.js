@@ -50,6 +50,11 @@ app.use(errorHandler);
 // app.use(express.static(path.join(__dirname, '../Frontend/dist')));
 
 // SPA fallback: send index.html for any GET request not handled above (except uploads/api)
+
+// const path = require('path');
+// app.use(express.static(path.join(__dirname, '../Frontend/dist')));
+
+
 // app.get('*', (req, res, next) => {
 //   if (
 //     req.method !== 'GET' ||
