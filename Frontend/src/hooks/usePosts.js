@@ -39,3 +39,27 @@ export function useCommentOnPost() {
     },
   })
 }
+
+// Delete comment mutation
+export function useDeleteComment() {
+  const queryClient = useQueryClient();
+  return useMutation(({ postId, commentId }) => postsApi.deleteComment(postId, commentId), {
+    onSuccess: () => {
+      queryClient.invalidateQueries(['posts']);
+    },
+  });
+}
+
+// Delete post mutation
+export function useDeletePost() {
+  const queryClient = useQueryClient();
+  return useMutation((postId) => {
+    const token = localStorage.getItem('token');
+    return postsApi.deletePost(postId, token);
+  }, {
+    onSuccess: () => {
+      queryClient.invalidateQueries(['userPosts']);
+      queryClient.invalidateQueries(['posts']);
+    },
+  });
+}

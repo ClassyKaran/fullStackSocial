@@ -126,17 +126,41 @@ module.exports = (io) => {
 
       try {
         // Save message in DB
-        await Message.create({ from: sender.id, to, text });
+        const savedMsg = await Message.create({ from: sender.id, to, text });
 
-        // ✅ Send real-time message to receiver room
-        io.to(to).emit('message', { from: sender.id, text });
+        // Send full message object to receiver room
+        io.to(to).emit('message', savedMsg);
 
-        // ✅ Send to sender as well (for instant update)
-        io.to(sender.id).emit('message', { from: sender.id, text });
+        // Send full message object to sender as well
+        io.to(sender.id).emit('message', savedMsg);
 
       } catch (err) {
         console.error('❌ Error saving/sending message:', err);
         socket.emit('error', { message: 'Failed to send message.' });
+      }
+    });
+
+    // ✅ Handle message deletion (from both sides)
+    socket.on('deleteMessage', async ({ messageId }) => {
+      try {
+        const msg = await Message.findById(messageId);
+        if (!msg) {
+          socket.emit('error', { message: 'Message not found.' });
+          return;
+        }
+        // Only sender or receiver can delete
+        const user = users[socket.id];
+        if (!user || (String(msg.from) !== String(user.id) && String(msg.to) !== String(user.id))) {
+          socket.emit('error', { message: 'Unauthorized to delete this message.' });
+          return;
+        }
+        await Message.deleteOne({ _id: messageId });
+        // Notify both users to remove message from UI
+        io.to(msg.from.toString()).emit('messageDeleted', { messageId });
+        io.to(msg.to.toString()).emit('messageDeleted', { messageId });
+      } catch (err) {
+        console.error('❌ Error deleting message:', err);
+        socket.emit('error', { message: 'Failed to delete message.' });
       }
     });
 

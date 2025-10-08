@@ -95,8 +95,35 @@ exports.deletePost = async (req, res, next) => {
     if (post.author.toString() !== req.user.id) {
       return res.status(403).json({ message: 'Unauthorized to delete this post' });
     }
-    await post.remove();
+  await Post.deleteOne({ _id: post._id });
     res.json({ message: 'Post deleted successfully' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Delete a comment from a post
+exports.deleteComment = async (req, res, next) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+    // Find comment index
+    const commentIdx = post.comments.findIndex(c => String(c._id) === String(req.params.commentId));
+    if (commentIdx === -1) {
+      return res.status(404).json({ message: 'Comment not found' });
+    }
+    // Only author of comment or post author can delete
+    const comment = post.comments[commentIdx];
+    if (String(comment.user) !== req.user.id && String(post.author) !== req.user.id) {
+      return res.status(403).json({ message: 'Unauthorized to delete this comment' });
+    }
+    post.comments.splice(commentIdx, 1);
+    await post.save();
+    // Re-fetch and populate comments.user
+    const populatedPost = await Post.findById(req.params.id).populate('author likes comments.user');
+    res.json(populatedPost);
   } catch (err) {
     next(err);
   }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { usePosts, useCreatePost, useLikePost, useUnlikePost, useCommentOnPost } from '../hooks/usePosts';
+import { usePosts, useCreatePost, useLikePost, useUnlikePost, useCommentOnPost, useDeleteComment } from '../hooks/usePosts';
 
 function Feed() {
   const navigateToProfile = userId => {
@@ -10,6 +10,7 @@ function Feed() {
   const likePost = useLikePost();
   const unlikePost = useUnlikePost();
   const commentOnPost = useCommentOnPost();
+  const deleteComment = useDeleteComment();
   const [showAllLikes, setShowAllLikes] = useState({});
   const [showAllComments, setShowAllComments] = useState({});
   const [showModal, setShowModal] = useState(false);
@@ -236,19 +237,35 @@ function Feed() {
                   if (!post || !post.comments?.length) return <div className="text-muted">No comments yet.</div>;
                   const sortedComments = [...(post.comments || [])].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
                   return sortedComments.map((c, idx) => (
-                    <div className="border-bottom py-2" key={idx}>
-                    <div className=" d-flex align-items-center">
-                     
-                      <img
-                        src={c.user?.profileImage ? `${import.meta.env.VITE_API_BASE_URL}${c.user.profileImage}` : `https://ui-avatars.com/api/?name=${encodeURIComponent(c.user?.username || 'User')}`}
-                        alt="Avatar"
-                        className="rounded-circle me-2"
-                        style={{ width: 28, height: 28, objectFit: 'cover', background: '#eee' }}
-                      />
-                      <span className="fw-bold ">{c.user?.username || 'User'}</span>
-                      <span className="ms-auto text-muted" style={{ fontSize: 12 }}>{c.createdAt ? new Date(c.createdAt).toLocaleString() : ''}</span>
-                    </div>
-                      <p className="" style={{ fontSize: 15, paddingLeft:"38px" }}>{c.text}</p>
+                    <div className="border-bottom py-2" key={c._id || idx}>
+                      <div className="d-flex align-items-center">
+                        <img
+                          src={c.user?.profileImage ? `${import.meta.env.VITE_API_BASE_URL}${c.user.profileImage}` : `https://ui-avatars.com/api/?name=${encodeURIComponent(c.user?.username || 'User')}`}
+                          alt="Avatar"
+                          className="rounded-circle me-2"
+                          style={{ width: 28, height: 28, objectFit: 'cover', background: '#eee' }}
+                        />
+                        <span className="fw-bold ">{c.user?.username || 'User'}</span>
+                        <span className="ms-auto text-muted" style={{ fontSize: 12 }}>{c.createdAt ? new Date(c.createdAt).toLocaleString() : ''}</span>
+                      </div>
+                      <div className="d-flex justify-content-between">
+                        <p className="" style={{ fontSize: 15, paddingLeft: "38px" }}>{c.text}</p>
+                        {(String(c.user?._id || c.user?.id) === String(myId) || String(post.author?._id || post.author?.id) === String(myId)) && (
+                          <button
+                            className="btn btn-primary btn-sm ms-2"
+                            disabled={deleteComment.isLoading}
+                            onClick={() => {
+                              if (window.confirm('Delete this comment?')) {
+                                deleteComment.mutate({ postId: post._id || post.id, commentId: c._id }, {
+                                  onSuccess: () => {
+                                    refetch();
+                                  }
+                                });
+                              }
+                            }}
+                          > <i className="bi bi-trash"></i></button>
+                        )}
+                      </div>
                     </div>
                   ));
                 })()}

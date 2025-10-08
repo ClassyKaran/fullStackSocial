@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useChat } from '../hooks/useChat';
 
 function Chat() {
-  const { users, messages, sendMessage, selectUser, activeUser } = useChat();
+  const { users, messages, sendMessage, selectUser, activeUser, deleteMessage } = useChat();
   const [recentUsers, setRecentUsers] = useState([]);
   const [text, setText] = useState('');
   const [unread, setUnread] = useState({});
@@ -159,9 +159,18 @@ function Chat() {
           >
             {activeUser && (!chatHistory[activeUser.id] || chatHistory[activeUser.id].length === 0) && <div className="text-muted text-center mt-5">No messages yet.</div>}
             {activeUser && chatHistory[activeUser.id]?.map((msg, idx) => (
-              <div key={idx} className={`d-flex mb-2 ${msg.sender === 'me' ? 'justify-content-end' : 'justify-content-start'}`}>
-                <div className={`px-3 py-2 rounded-3 ${msg.sender === 'me' ? 'bg-primary text-white' : 'bg-white border'}`} style={{ maxWidth: '70%', fontSize: 15 }}>
-                  {msg.text}
+              <div key={msg._id || msg.id || idx} className={`d-flex mb-2 ${msg.sender === 'me' ? 'justify-content-end' : 'justify-content-start'}`}>
+                <div className={`px-3 py-2 rounded-3 d-flex align-items-center ${msg.sender === 'me' ? 'bg-primary text-white' : 'bg-white border'}`} style={{ maxWidth: '70%', fontSize: 15 }}>
+                  <span>{msg.text}</span>
+                  {/* Show delete button for sender or receiver */}
+                  {(msg._id || msg.id) && ((msg.from === myId || msg.to === myId) || msg.sender === 'me') && (
+                    <button
+                      className="btn btn-sm btn-primary ms-2"
+                      
+                      title="Delete message"
+                      onClick={() => deleteMessage(msg._id || msg.id)}
+                    > <i className="bi bi-trash"></i></button>
+                  )}
                 </div>
               </div>
             ))}

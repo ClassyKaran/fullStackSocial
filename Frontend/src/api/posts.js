@@ -41,3 +41,18 @@ export const commentOnPost = (postId, comment) => {
     headers: { Authorization: `Bearer ${token}` },
   });
 };
+
+// Delete a comment from a post
+export const deleteComment = (postId, commentId) => {
+  const token = localStorage.getItem('token');
+  return api.delete(`/posts/${postId}/comment/${commentId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
+// Delete a post
+export const deletePost = (postId, token) => {
+  return api.delete(`/posts/${postId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};

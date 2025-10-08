@@ -12,4 +12,7 @@ router.post('/:id/unlike', authMiddleware, require('../controllers/postControlle
 router.post('/:id/comment', authMiddleware, commentPost);
 router.delete('/:id', authMiddleware, deletePost);
 
+// Delete a comment from a post
+router.delete('/:id/comment/:commentId', authMiddleware, require('../controllers/postController').deleteComment);
+
 module.exports = router;

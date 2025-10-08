@@ -3,24 +3,23 @@ import React, { useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useUserPosts } from '../hooks/useUserPosts';
-import { useLikePost, useCommentOnPost } from '../hooks/usePosts';
+import { useLikePost, useCommentOnPost, useDeletePost } from '../hooks/usePosts';
 
 
 
 function Profile() {
-  // Delete post handler
-  const handleDeletePost = async postId => {
-    const token = localStorage.getItem('token');
+  // Delete post handler using mutation
+  const deletePost = useDeletePost();
+  const handleDeletePost = postId => {
     if (!window.confirm('Delete this post?')) return;
-    try {
-      await fetch(`${import.meta.env.VITE_API_BASE_URL}/posts/${postId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      refetch();
-    } catch {
-      alert('Delete failed');
-    }
+    deletePost.mutate(postId, {
+      onSuccess: () => {
+        refetch();
+      },
+      onError: () => {
+        alert('Delete failed');
+      }
+    });
   };
 
   // Message button handler
@@ -241,7 +240,7 @@ function Profile() {
                   </button>
                   {String(post.author?._id || post.author?.id) === String(myId) && (
                     <div>
-                      <button className="btn btn-sm btn-danger" onClick={() => handleDeletePost(post._id || post.id)}>Delete</button>
+                      <button className="btn btn-sm btn-danger" onClick={() => handleDeletePost(post._id || post.id)} disabled={deletePost.isLoading}>Delete</button>
                     </div>
                   )}
                 </div>

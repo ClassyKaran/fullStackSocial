@@ -58,17 +58,90 @@ export function useChat() {
         if (!updatedHistory[partnerId]) updatedHistory[partnerId] = [];
         // If chat not open, mark as unread
         const isActive = activeUser && activeUser.id === partnerId;
-        updatedHistory[partnerId] = [
-          ...updatedHistory[partnerId],
-          { ...message, sender: senderType, read: isActive }
-        ];
+        // Replace temp message with real one if exists
+        let replaced = false;
+        updatedHistory[partnerId] = updatedHistory[partnerId].map(m => {
+          if (!replaced && m.text === message.text && m.sender === senderType && !m._id && m.id && m.id.startsWith('local-')) {
+            replaced = true;
+            return {
+              ...message,
+              sender: senderType,
+              read: isActive,
+              from: message.from || m.from,
+              to: message.to || m.to,
+              _id: message._id || m._id,
+              id: message.id || m.id
+            };
+          }
+          // Always ensure from/to/sender/id/_id
+          return {
+            ...m,
+            from: m.from || message.from,
+            to: m.to || message.to,
+            sender: m.sender || senderType,
+            id: m.id,
+            _id: m._id
+          };
+        });
+        // If not replaced, just add
+        if (!replaced) {
+          updatedHistory[partnerId] = [
+            ...updatedHistory[partnerId],
+            {
+              ...message,
+              sender: senderType,
+              read: isActive,
+              from: message.from,
+              to: message.to,
+              _id: message._id,
+              id: message.id
+            }
+          ];
+        }
         localStorage.setItem('chatHistory', JSON.stringify(updatedHistory));
         return updatedHistory;
       });
 
       // If the message is for the active user, update messages state
       if (activeUser && activeUser.id === partnerId) {
-        setMessages((prev) => [...prev, { ...message, sender: senderType, read: true }]);
+        setMessages((prev) => {
+          let replaced = false;
+          const newArr = prev.map(m => {
+            if (!replaced && m.text === message.text && m.sender === senderType && !m._id && m.id && m.id.startsWith('local-')) {
+              replaced = true;
+              return {
+                ...message,
+                sender: senderType,
+                read: true,
+                from: message.from || m.from,
+                to: message.to || m.to,
+                _id: message._id || m._id,
+                id: message.id || m.id
+              };
+            }
+            // Always ensure from/to/sender/id/_id
+            return {
+              ...m,
+              from: m.from || message.from,
+              to: m.to || message.to,
+              sender: m.sender || senderType,
+              id: m.id,
+              _id: m._id
+            };
+          });
+          if (!replaced) {
+            return [...newArr, {
+              ...message,
+              sender: senderType,
+              read: true,
+              from: message.from,
+              to: message.to,
+              _id: message._id,
+              id: message.id
+            }];
+          }
+          return newArr;
+        });
       }
     });
 
@@ -125,8 +198,9 @@ export function useChat() {
   // Send message to active user
   const sendMessage = (text) => {
     if (socket && activeUser) {
-      // Add message immediately to UI
-      const newMessage = { from: myUserId, to: activeUser.id, text, sender: 'me' };
+      // Add message immediately to UI with a unique id
+      const tempId = 'local-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+      const newMessage = { from: myUserId, to: activeUser.id, text, sender: 'me', id: tempId };
       setChatHistory((prevHistory) => {
         const updatedHistory = { ...prevHistory };
         if (!updatedHistory[activeUser.id]) updatedHistory[activeUser.id] = [];
@@ -149,5 +223,30 @@ export function useChat() {
     // eslint-disable-next-line
   }, []);
 
-  return { users, messages, sendMessage, selectUser, activeUser };
+  // Delete message by id
+  const deleteMessage = (messageId) => {
+    if (socket && messageId) {
+      socket.emit('deleteMessage', { messageId });
+    }
+  };
+
+  // Listen for messageDeleted event
+  useEffect(() => {
+    if (!socket) return;
+    const handler = ({ messageId }) => {
+      setChatHistory(prevHistory => {
+        const updated = { ...prevHistory };
+        Object.keys(updated).forEach(uid => {
+          updated[uid] = updated[uid].filter(m => m._id !== messageId && m.id !== messageId);
+        });
+        localStorage.setItem('chatHistory', JSON.stringify(updated));
+        return updated;
+      });
+      setMessages(prev => prev.filter(m => m._id !== messageId && m.id !== messageId));
+    };
+    socket.on('messageDeleted', handler);
+    return () => socket.off('messageDeleted', handler);
+  }, [socket]);
+
+  return { users, messages, sendMessage, selectUser, activeUser, deleteMessage };
 }
