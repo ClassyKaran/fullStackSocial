@@ -81,7 +81,7 @@ function Register() {
 
           <button
             type="submit"
-            className="btn btn-success w-100 btn-lg mt-2"
+            className="btn btn-primary w-100 btn-lg mt-2"
             disabled={registerMutation.isLoading}
           >
             {registerMutation.isLoading ? (
