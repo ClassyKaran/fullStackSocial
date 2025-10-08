@@ -39,12 +39,15 @@ exports.createPost = async (req, res, next) => {
     const { title, description, content } = req.body;
     let imagePath = '';
     let videoPath = '';
+    console.log('createPost called by user:', req.user && req.user.id ? req.user.id : req.user);
+    console.log('Received files:', req.files);
     if (req.files && req.files.image && req.files.image[0]) {
       imagePath = `/uploads/${req.files.image[0].filename}`;
     }
     if (req.files && req.files.video && req.files.video[0]) {
       videoPath = `/uploads/${req.files.video[0].filename}`;
     }
+    if (!req.user || !req.user.id) return res.status(401).json({ error: 'Unauthorized' });
     const post = await Post.create({
       author: req.user.id,
       title,

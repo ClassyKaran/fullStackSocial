@@ -24,7 +24,6 @@ export const createPost = (formData) => {
   return api.post('/posts', formData, {
     headers: {
       Authorization: `Bearer ${token}`,
-      'Content-Type': 'multipart/form-data',
     },
   });
 };

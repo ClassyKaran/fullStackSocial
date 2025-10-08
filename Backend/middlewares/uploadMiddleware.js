@@ -3,7 +3,14 @@ const path = require('path');
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, '../uploads'));
+    const uploadDir = path.join(__dirname, '../uploads');
+    // Ensure uploads directory exists (important for some deployment environments)
+    try {
+      require('fs').mkdirSync(uploadDir, { recursive: true });
+    } catch (err) {
+      return cb(err);
+    }
+    cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
     const ext = path.extname(file.originalname);

@@ -17,7 +17,10 @@ exports.authMiddleware = async (req, res, next) => {
       return res.status(400).json({ error: 'Invalid user id in token' });
     }
     req.user = await User.findById(userId);
-    console.log("userfrommiddleware", req.user);
+    if (!req.user) {
+      return res.status(401).json({ error: 'User not found' });
+    }
+    console.log("userfrommiddleware", req.user && req.user._id ? req.user._id.toString() : req.user);
     next();
   } catch (err) {
     res.status(401).json({ error: 'Invalid token' });
